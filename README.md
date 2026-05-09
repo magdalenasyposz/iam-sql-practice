@@ -1,6 +1,6 @@
-# IAM SQL Practice — ING Hubs Preparation
+# IAM SQL Practice 
 
-A hands-on SQL Server project simulating a real **Identity & Access Management (IAM)** environment at a financial institution. Built to practice SQL for recruitment tests and IAM analyst roles.
+A hands-on SQL Server project simulating a real environment at a financial institution. Built to practice SQL for recruitment tests and IAM analyst roles.
 
 ## What's Inside
 
