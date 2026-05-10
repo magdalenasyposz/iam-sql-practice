@@ -89,4 +89,3 @@ The seed data contains realistic IAM issues to find and remediate:
 - Login from external IP by terminated employee
 
 ---
-*Built for ING Hubs IAM recruitment preparation | SQL Server (Azure SQL Edge)*
