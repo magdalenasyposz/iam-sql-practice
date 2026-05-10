@@ -2,6 +2,8 @@
 -- Module 4: Subqueries & CTEs
 -- Topics: subqueries (WHERE/FROM/SELECT), WITH (CTE), EXISTS, NOT EXISTS
 -- ============================================================
+USE IAMPractice;
+GO
 
 -- 1. Subquery in WHERE: employees who have access to Critical applications
 SELECT Username, FirstName, LastName, JobTitle

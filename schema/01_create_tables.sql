@@ -3,8 +3,11 @@
 -- Project: ING Hubs IAM SQL Practice
 -- ============================================================
 
-CREATE DATABASE IF NOT EXISTS IAMPractice;
+IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = 'IAMPractice')
+    CREATE DATABASE IAMPractice;
+GO
 USE IAMPractice;
+GO
 
 -- Departments / Business Units
 CREATE TABLE Departments (

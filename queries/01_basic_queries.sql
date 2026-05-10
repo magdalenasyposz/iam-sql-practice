@@ -2,6 +2,8 @@
 -- Module 1: Basic Queries
 -- Topics: SELECT, WHERE, ORDER BY, LIKE, IN, BETWEEN, IS NULL
 -- ============================================================
+USE IAMPractice;
+GO
 
 -- 1. List all active employees
 SELECT EmployeeID, Username, FirstName, LastName, JobTitle, StartDate
@@ -62,7 +64,7 @@ SELECT al.AuditID, e.Username, a.AppName,
        al.EventType, al.Outcome, al.IPAddress,
        al.EventTimestamp, al.Details
 FROM AuditLog al
-LEFT JOIN Employees e   ON al.EmployeeID = al.EmployeeID
+LEFT JOIN Employees e   ON al.EmployeeID = e.EmployeeID
 LEFT JOIN Applications a ON al.ApplicationID = a.ApplicationID
 WHERE al.Outcome IN ('Failure', 'Warning')
 ORDER BY al.EventTimestamp DESC;

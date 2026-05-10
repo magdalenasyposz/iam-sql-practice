@@ -3,6 +3,8 @@
 -- Real-world IAM analyst queries: access certification, risk scoring,
 -- privilege creep detection, self-approval detection
 -- ============================================================
+USE IAMPractice;
+GO
 
 -- 1. ACCESS CERTIFICATION REPORT
 --    Full snapshot of who has what — for quarterly review
@@ -41,7 +43,7 @@ WITH UserAccessScore AS (
     SELECT e.EmployeeID, e.Username,
            e.EmploymentType,
            COUNT(ur.RoleID)                      AS TotalRoles,
-           SUM(r.IsPrivileged)                   AS PrivilegedRoles,
+           SUM(CAST(r.IsPrivileged AS INT))       AS PrivilegedRoles,
            SUM(CASE WHEN a.RiskLevel = 'Critical' THEN 3
                     WHEN a.RiskLevel = 'High'     THEN 2
                     WHEN a.RiskLevel = 'Medium'   THEN 1

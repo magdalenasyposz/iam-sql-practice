@@ -1,6 +1,8 @@
 -- ============================================================
 -- IAM Practice Database - Seed Data
 -- ============================================================
+USE IAMPractice;
+GO
 
 -- Departments
 INSERT INTO Departments (DepartmentName, CostCenter) VALUES
@@ -17,16 +19,19 @@ INSERT INTO Departments (DepartmentName, CostCenter) VALUES
 INSERT INTO Employees (Username, FirstName, LastName, Email, DepartmentID, JobTitle, EmploymentType, Status, StartDate) VALUES
 ('m.kowalski',    'Marek',     'Kowalski',    'marek.kowalski@ing.com',    1, 'IT Manager',              'Permanent',  'Active',     '2018-03-12'),
 ('a.nowak',       'Anna',      'Nowak',       'anna.nowak@ing.com',        2, 'IAM Engineer',            'Permanent',  'Active',     '2020-06-01'),
-('p.wisniewska',  'Piotr',     'Wiśniewski',  'piotr.wisniewski@ing.com',  2, 'IAM Analyst',             'Permanent',  'Active',     '2021-09-15'),
+('p.wisniewski',  'Piotr',     'Wiśniewski',  'piotr.wisniewski@ing.com',  2, 'IAM Analyst',             'Permanent',  'Active',     '2021-09-15'),
 ('k.wojcik',      'Katarzyna', 'Wójcik',      'katarzyna.wojcik@ing.com',  3, 'Compliance Officer',      'Permanent',  'Active',     '2019-01-20'),
 ('j.kaminski',    'Jan',       'Kamiński',    'jan.kaminski@ing.com',      4, 'Retail Banking Analyst',  'Permanent',  'Active',     '2022-04-11'),
-('e.lewandowski', 'Ewa',       'Lewandowska', 'ewa.lewandowska@ing.com',   5, 'Finance Manager',         'Permanent',  'Active',     '2017-07-03'),
+('e.lewandowska', 'Ewa',       'Lewandowska', 'ewa.lewandowska@ing.com',   5, 'Finance Manager',         'Permanent',  'Active',     '2017-07-03'),
 ('t.zielinski',   'Tomasz',    'Zieliński',   'tomasz.zielinski@ing.com',  7, 'Trader',                  'Permanent',  'Active',     '2020-11-22'),
 ('m.szymanski',   'Michał',    'Szymański',   'michal.szymanski@ing.com',  8, 'Security Analyst',        'Permanent',  'Active',     '2021-02-08'),
 ('b.contractor',  'Barbara',   'Nowacka',     'barbara.nowacka@ext.com',   1, 'IT Consultant',           'Contractor', 'Active',     '2024-01-10'),
 ('r.intern',      'Rafał',     'Intern',      'rafal.intern@ing.com',      2, 'IAM Intern',              'Intern',     'Active',     '2025-02-01'),
 ('l.former',      'Lidia',     'Kowalczyk',   'lidia.kowalczyk@ing.com',   4, 'Retail Banking Analyst',  'Permanent',  'Terminated', '2020-05-01'),
 ('d.mover',       'Dominika',  'Wróbel',      'dominika.wrobel@ing.com',   6, 'HR Specialist',           'Permanent',  'Active',     '2019-03-17');
+
+-- Set termination date for terminated employee
+UPDATE Employees SET EndDate = '2023-08-31' WHERE Username = 'l.former';
 
 -- Set department managers
 UPDATE Departments SET ManagerID = 1 WHERE DepartmentID = 1;
@@ -176,7 +181,7 @@ INSERT INTO SoDConflicts (RoleID_A, RoleID_B, ConflictReason, Severity) VALUES
 
 -- Access Requests (sample workflow history)
 INSERT INTO AccessRequests (EmployeeID, RoleID, RequestType, RequestedBy, ApprovedBy, Status, BusinessJustification, RequestedAt, ResolvedAt) VALUES
-(7,  10, 'Grant',  't.zielinski',  'e.lewandowski', 'Approved',  'Trader requires execution rights for EUR/USD desk',         '2020-11-22', '2020-11-23'),
+(7,  10, 'Grant',  't.zielinski',  'e.lewandowska', 'Approved',  'Trader requires execution rights for EUR/USD desk',         '2020-11-22', '2020-11-23'),
 (9,  2,  'Grant',  'm.kowalski',   'm.kowalski',    'Approved',  'Contractor needs AD admin for migration project',           '2024-01-10', '2024-01-10'),  -- self-approved: finding!
 (12, 19, 'Grant',  'd.mover',      'a.nowak',       'Approved',  'Temporary access needed for year-end finance reconciliation','2025-01-05', '2025-01-06'),
 (5,  8,  'Grant',  'j.kaminski',   NULL,            'Pending',   'Need CBS Admin to fix customer data issue',                 '2026-05-01', NULL),

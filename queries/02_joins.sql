@@ -2,6 +2,8 @@
 -- Module 2: JOINs
 -- Topics: INNER JOIN, LEFT JOIN, RIGHT JOIN, FULL OUTER JOIN, self-join
 -- ============================================================
+USE IAMPractice;
+GO
 
 -- 1. INNER JOIN: Show each employee with their department name
 SELECT e.Username, e.FirstName, e.LastName, d.DepartmentName, e.JobTitle

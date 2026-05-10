@@ -2,6 +2,8 @@
 -- Module 3: Aggregations
 -- Topics: COUNT, SUM, AVG, GROUP BY, HAVING, DISTINCT
 -- ============================================================
+USE IAMPractice;
+GO
 
 -- 1. Count employees per department
 SELECT d.DepartmentName,
@@ -26,7 +28,7 @@ ORDER BY TotalRoles DESC;
 -- 3. Applications by number of privileged role assignments
 SELECT a.AppName, a.RiskLevel,
        COUNT(DISTINCT r.RoleID)   AS TotalRoles,
-       SUM(r.IsPrivileged)        AS PrivilegedRoles,
+       SUM(CAST(r.IsPrivileged AS INT)) AS PrivilegedRoles,
        COUNT(DISTINCT ur.EmployeeID) AS UsersWithAccess
 FROM Applications a
 JOIN Roles r    ON a.ApplicationID = r.ApplicationID

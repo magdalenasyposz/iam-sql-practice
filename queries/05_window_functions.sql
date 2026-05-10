@@ -3,6 +3,8 @@
 -- Topics: ROW_NUMBER, RANK, DENSE_RANK, LAG, LEAD, PARTITION BY,
 --         running totals, moving averages
 -- ============================================================
+USE IAMPractice;
+GO
 
 -- 1. ROW_NUMBER: Rank employees by number of roles, per department
 SELECT e.Username,
