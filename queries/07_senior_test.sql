@@ -19,7 +19,17 @@ GO
 -- Order by department name, then by hire date oldest first.
 
 -- YOUR ANSWER:
-
+SELECT e.Username,
+       e.FirstName + ' ' + e.LastName AS FullName,
+       e.JobTitle,
+       d.DepartmentName,
+       e.StartDate
+FROM Employees e
+JOIN Departments d ON e.DepartmentID = d.DepartmentID
+WHERE e.Status = 'Active'
+  AND e.EmploymentType = 'Permanent'
+  AND e.StartDate < '2021-01-01'
+ORDER BY d.DepartmentName, e.StartDate ASC;
 
 -- A2.
 -- Find all applications that are either Critical risk OR are privileged (IsPrivileged = 1).
@@ -27,7 +37,11 @@ GO
 -- Order by risk level descending.
 
 -- YOUR ANSWER:
-
+SELECT AppName, AppType, RiskLevel, Owner
+FROM Applications
+WHERE RiskLevel = 'Critical'
+   OR IsPrivileged = 1
+ORDER BY RiskLevel DESC;
 
 -- A3.
 -- How many employees are in each employment type (Permanent, Contractor, Intern)?
@@ -35,7 +49,11 @@ GO
 -- Round the percentage to 1 decimal place.
 
 -- YOUR ANSWER:
-
+Select EmploymentType,
+       COUNT(*) AS EmployeeCount,
+       ROUND(COUNT(*) * 100.0 / (SELECT COUNT(*) FROM Employees), 1) AS PercentageOfWorkforce
+FROM Employees
+GROUP BY EmploymentType;    
 
 -- A4.
 -- Find all access requests that were approved,
@@ -44,7 +62,12 @@ GO
 -- Order by days taken descending.
 
 -- YOUR ANSWER:
-
+SELECT e.Username, r.RoleName, ar.Status, ar.ApprovedBy, DATEDIFF(day, ar.RequestedAt, ar.resolvedat) as DaysWait
+FROM AccessRequests ar
+JOIN employees e ON ar.EmployeeID = e.EmployeeID
+JOIN roles r on ar.RoleID = r.RoleID
+WHERE ar.Status = 'Approved'
+ORDER BY DATEDIFF(day, ar.RequestedAt, ar.resolvedat) DESC;
 
 -- ============================================================
 -- SECTION B: JOINS (Questions 5-7)
@@ -56,7 +79,17 @@ GO
 -- Include only active role assignments.
 
 -- YOUR ANSWER:
-
+SELECT e.FirstName + ' ' + e.LastName AS FullName,
+app.AppName, 
+r.RoleName,
+r.IsPrivileged 
+FROM Employees e
+JOIN Departments d ON e.DepartmentID = d.DepartmentID
+JOIN UserRoles ur ON e.EmployeeID = ur.EmployeeID
+JOIN Roles r ON ur.RoleID = r.RoleID 
+JOIN Applications app ON r.ApplicationID = app.ApplicationID
+WHERE d.DepartmentName = 'Identity & Access Management'
+AND ur.IsActive = 1;
 
 -- B6.
 -- Find all employees who have access to MORE THAN ONE application.
@@ -64,6 +97,18 @@ GO
 -- Order by application count descending.
 
 -- YOUR ANSWER:
+
+SELECT e.Username, d.DepartmentName, COUNT(DISTINCT app.ApplicationID) AS AppAmount 
+FROM Employees e
+JOIN Departments d ON e.DepartmentID = d.DepartmentID 
+JOIN UserRoles ur ON e.EmployeeID = ur.EmployeeID AND ur.IsActive = 1
+JOIN Roles r on ur.RoleID = r.RoleID
+JOIN Applications app on r.ApplicationID = app.ApplicationID
+GROUP BY e.EmployeeID, e.Username, d.DepartmentName
+HAVING COUNT(DISTINCT app.ApplicationID) > 1 
+ORDER BY AppAmount DESC;
+
+
 
 
 -- B7.
@@ -73,6 +118,21 @@ GO
 -- Order by severity (Critical first).
 
 -- YOUR ANSWER:
+
+SELECT ra.RoleName AS Role_A, rb.RoleName as Role_B,
+app.AppName as AppA, appb.AppName as Appb, sod.ConflictReason, sod.Severity
+FROM SoDConflicts sod 
+JOIN roles ra ON sod.RoleID_A = ra.RoleID
+JOIN roles rb ON sod.RoleID_B = rb.RoleID
+JOIN Applications app on ra.ApplicationID = app.ApplicationID 
+JOIN Applications appb on rb.ApplicationID = appb.ApplicationID
+ORDER BY CASE Severity
+    WHEN 'Critical' THEN 1 
+    WHEN 'High' then 2 
+    when 'medium' then 3 
+    when 'low' then 4 
+end;
+
 
 
 -- ============================================================
@@ -85,7 +145,25 @@ GO
 -- Show username, full name, and employment type.
 
 -- YOUR ANSWER:
+SELECT e.Username, e.FirstName + ' ' + e.LastName AS FullName, e.EmploymentType
+FROM Employees e 
+WHERE e.EmployeeID IN (
+    select ur.EmployeeID
+    FROM UserRoles ur
+    JOIN Roles r on ur.RoleID = r.RoleID
+    JOIN Applications app ON r.ApplicationID = app.ApplicationID
+    where r.IsPrivileged = 1
+    AND app.RiskLevel = 'Critical'
+    AND ur.IsActive = 1
+);
 
+-- YOUR ANSWER v2 - its shorter:
+SELECT e.Username, e.FirstName + ' ' + e.LastName AS FullName, e.EmploymentType
+FROM Employees e 
+JOIN UserRoles ur ON e.EmployeeID = ur.EmployeeID AND ur.IsActive = 1
+JOIN Roles r ON ur.RoleID = r.RoleID
+JOIN Applications app ON r.ApplicationID = app.ApplicationID
+WHERE r.IsPrivileged = 1 AND app.RiskLevel = 'Critical';
 
 -- C9.
 -- Write a CTE that calculates a risk score for each application:
@@ -96,7 +174,18 @@ GO
 -- Order by score descending.
 
 -- YOUR ANSWER:
-
+WITH AppRiskScore AS (
+    SELECT app.ApplicationID, app.AppName, app.RiskLevel, 
+    SUM(CASE WHEN r.IsPrivileged = 1 THEN 3 ELSE 1 END) AS RoleScore,
+    COUNT(DISTINCT CASE WHEN ur.IsActive = 1 THEN 1 END) * 2 AS UserScore
+    FROM Applications app
+    JOIN roles r on app.ApplicationID = r.ApplicationID
+    LEFT JOIN UserRoles ur ON r.RoleID = ur.RoleID
+    GROUP BY app.ApplicationID, app.AppName, app.RiskLevel
+)
+SELECT AppName, RiskLevel, RoleScore + UserScore AS TotalScore
+FROM AppRiskScore
+ORDER BY TotalScore Desc; 
 
 -- C10.
 -- Using CTEs, produce an "orphaned access" report:
@@ -105,7 +194,16 @@ GO
 -- what roles they still hold, and flag any privileged access as URGENT.
 
 -- YOUR ANSWER:
-
+WITH OrpAcc AS (
+    select e.username, r.RoleName, e.status, ur.IsActive, e.StartDate, e.EndDate, r.IsPrivileged
+    FROM Employees e
+    JOIN UserRoles ur ON e.EmployeeID = ur.EmployeeID
+    JOIN Roles r ON ur.RoleID = r.RoleID
+    WHERE e.Status = 'Terminated' AND ur.IsActive = 1
+)
+SELECT Username, RoleName, status, IsActive, DATEDIFF(day, EndDate, GETDATE()) AS SinceTermination, 
+CASE WHEN IsPrivileged = 1 THEN 'Urgent' ELSE 'Review' END AS Flag
+FROM OrpAcc;
 
 -- ============================================================
 -- SECTION D: WINDOW FUNCTIONS (Questions 11-13)
@@ -117,6 +215,18 @@ GO
 -- Employees with the same role count should share a rank.
 
 -- YOUR ANSWER:
+WITH RoleCounts AS (
+    SELECT e.EmployeeID, e.Username, d.DepartmentName, COUNT(ur.RoleID) AS ActiveRoleCount
+    FROM Employees e
+    JOIN Departments d ON e.DepartmentID = d.DepartmentID
+    LEFT JOIN UserRoles ur ON e.EmployeeID = ur.EmployeeID AND ur.IsActive = 1 
+    GROUP BY e.EmployeeID, e.Username, d.DepartmentName
+
+)
+SELECT DepartmentName, Username, ActiveRoleCount, DENSE_RANK() OVER (PARTITION BY DepartmentName ORDER BY ActiveRoleCount DESC) AS RankInDept
+FROM "RoleCounts"
+ORDER BY DepartmentName, RankInDept;
+
 
 
 -- D12.
@@ -126,6 +236,13 @@ GO
 
 -- YOUR ANSWER:
 
+SELECT e.username, 
+LAG(ar.RequestedAt) OVER(PARTITION BY e.EmployeeID ORDER BY ar.requestedAt) AS PreviousReq, 
+LAG(ar.status) OVER (PARTITION BY e.EmployeeID ORDER BY ar.requestedAt),
+ar.RequestedAt, ar.Status
+FROM Employees e 
+JOIN AccessRequests ar ON ar.EmployeeID = e.EmployeeID 
+ORDER BY e.Username, ar.RequestedAt
 
 -- D13.
 -- Divide all active employees into 3 risk tiers based on their total number of active roles:
@@ -133,7 +250,15 @@ GO
 -- Show username, employment type, role count, and tier.
 
 -- YOUR ANSWER:
-
+WITH ActRolesCount AS (
+    SELECT e.Username, COUNT(ur.UserRoleID) AS RolesCount
+    FROM Employees e 
+    JOIN UserRoles ur ON ur.EmployeeID = e.EmployeeID
+    WHERE ur.IsActive = 1
+    GROUP BY e.username
+)
+SELECT Username, RolesCount
+FROM ActRolesCount
 
 -- ============================================================
 -- SECTION E: ADVANCED IAM (Questions 14-15)
@@ -150,6 +275,7 @@ GO
 --   'CERTIFY' otherwise
 
 -- YOUR ANSWER:
+
 
 
 -- E15.
