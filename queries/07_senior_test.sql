@@ -276,7 +276,18 @@ FROM ActRolesCount
 
 -- YOUR ANSWER:
 
-
+SELECT e.Username, e.FirstName + ' ' + e.LastName AS FullName, app.AppName, r.RoleName, app.RiskLevel, ur.AssignedAt,
+CASE 
+    WHEN e.Status = 'Terminated' THEN 'REVOKE'
+    WHEN r.IsPrivileged = 1 AND app.RiskLevel = 'Critical' THEN 'URGENT REVIEW'
+    WHEN r.IsPrivileged = 1 OR app.RiskLevel = 'High' THEN 'REVIEW'
+    ELSE 'CERTIFY'
+END AS CertificationDecision
+FROM Employees e
+JOIN UserRoles ur ON e.EmployeeID = ur.EmployeeID
+JOIN Roles r ON ur.RoleID = r.RoleID
+JOIN Applications app ON r.ApplicationID = app.ApplicationID
+WHERE e.EmploymentType IN ('Contractor', 'Intern'); 
 
 -- E15.
 -- Identify all Segregation of Duties violations currently active in the system.
@@ -286,4 +297,25 @@ FROM ActRolesCount
 -- role was assigned — this tells you how long the violation has been active.
 -- Order by severity, then by days active descending.
 
--- YOUR ANSWER:
+SELECT e.Username, d.DepartmentName, ra.RoleName AS RoleA, rb.RoleName AS RoleB, sod.Severity,
+DATEDIFF(day, 
+    (SELECT MAX(ur.AssignedAt) 
+     FROM UserRoles ur 
+     JOIN Roles r ON ur.RoleID = r.RoleID
+     WHERE ur.EmployeeID = e.EmployeeID AND (r.RoleName = ra.RoleName OR r.RoleName = rb.RoleName) AND ur.IsActive = 1), 
+GETDATE()) AS DaysActive
+FROM SoDConflicts sod
+JOIN Roles ra ON sod.RoleID_A = ra.RoleID
+JOIN Roles rb ON sod.RoleID_B = rb.RoleID
+JOIN UserRoles ura ON ra.RoleID = ura.RoleID AND ura.IsActive = 1
+JOIN UserRoles urb ON rb.RoleID = urb.RoleID AND urb.IsActive = 1       
+JOIN Employees e ON ura.EmployeeID = e.EmployeeID AND urb.EmployeeID = e.EmployeeID
+JOIN Departments d ON e.DepartmentID = d.DepartmentID
+ORDER BY CASE sod.Severity
+    WHEN 'Critical' THEN 1 
+    WHEN 'High' then 2 
+    when 'medium' then 3 
+    when 'low' then 4 
+end, DaysActive DESC;
+
+-- YOUR ANSWER: 
