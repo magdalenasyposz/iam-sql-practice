@@ -45,7 +45,7 @@ Real queries an IAM analyst runs day-to-day:
 ### Run SQL Server locally
 ```bash
 # Start (first time)
-docker run -e "ACCEPT_EULA=1" -e "MSSQL_SA_PASSWORD=SqlPractice123!" \
+docker run -e "ACCEPT_EULA=1" -e "MSSQL_SA_PASSWORD=<password>" \
   -p 1433:1433 --name sqlserver --hostname sqlserver \
   -d mcr.microsoft.com/azure-sql-edge
 
@@ -59,7 +59,7 @@ docker start sqlserver
 | Server | `localhost` |
 | Authentication | SQL Login |
 | Username | `sa` |
-| Password | `SqlPractice123!` |
+| Password | `<password>` |
 
 ### Load the database
 Run scripts in order:
